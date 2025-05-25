@@ -1,0 +1,257 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\models\\rolepreset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\models\\rolepreset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\features\\sms\\smsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\features\\sms\\smsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\plugin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\plugin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\clients\\webserverclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\clients\\webserverclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\commands\\commands.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\commands\\commands.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\site22roleplay.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\site22roleplay.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\clients\\discordclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\clients\\discordclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\commands\\roleselection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\commands\\roleselection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\config\\config.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\config\\config.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\features\\menus\\serverspecificrolemenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\features\\menus\\serverspecificrolemenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\models\\permissions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\models\\permissions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\webserver\\webserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\webserver\\webserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|c:\\users\\ducstii\\source\\repos\\site22roleplay\\site22roleplay\\webserver\\apikeymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{05EC1D5F-E70F-4709-95FD-418746444C99}|Site22Roleplay\\Site22Roleplay.csproj|solutionrelative:site22roleplay\\webserver\\apikeymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 9,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{131369f2-062d-44a2-8671-91ff31efb4f4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "WebServerClient.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Clients\\WebServerClient.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Clients\\WebServerClient.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Clients\\WebServerClient.cs",
+              "RelativeToolTip": "Site22Roleplay\\Clients\\WebServerClient.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:38:15.273Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "DiscordClient.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Clients\\DiscordClient.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Clients\\DiscordClient.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Clients\\DiscordClient.cs",
+              "RelativeToolTip": "Site22Roleplay\\Clients\\DiscordClient.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:38:13.713Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "RoleSelection.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Commands\\RoleSelection.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Commands\\RoleSelection.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Commands\\RoleSelection.cs",
+              "RelativeToolTip": "Site22Roleplay\\Commands\\RoleSelection.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:38:10.499Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Commands.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Commands\\Commands.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Commands\\Commands.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Commands\\Commands.cs",
+              "RelativeToolTip": "Site22Roleplay\\Commands\\Commands.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:38:08.363Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Config.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Config\\Config.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Config\\Config.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Config\\Config.cs",
+              "RelativeToolTip": "Site22Roleplay\\Config\\Config.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:38:05.076Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "SMSManager.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Features\\SMS\\SMSManager.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Features\\SMS\\SMSManager.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Features\\SMS\\SMSManager.cs*",
+              "RelativeToolTip": "Site22Roleplay\\Features\\SMS\\SMSManager.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:47.503Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ServerSpecificRoleMenu.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Features\\Menus\\ServerSpecificRoleMenu.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Features\\Menus\\ServerSpecificRoleMenu.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Features\\Menus\\ServerSpecificRoleMenu.cs",
+              "RelativeToolTip": "Site22Roleplay\\Features\\Menus\\ServerSpecificRoleMenu.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:44.578Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "RolePreset.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Models\\RolePreset.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Models\\RolePreset.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Models\\RolePreset.cs*",
+              "RelativeToolTip": "Site22Roleplay\\Models\\RolePreset.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:40.885Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Permissions.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Models\\Permissions.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Models\\Permissions.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Models\\Permissions.cs",
+              "RelativeToolTip": "Site22Roleplay\\Models\\Permissions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:39.377Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "WebServer.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\WebServer\\WebServer.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\WebServer\\WebServer.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\WebServer\\WebServer.cs",
+              "RelativeToolTip": "Site22Roleplay\\WebServer\\WebServer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:36.243Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ApiKeyManager.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\WebServer\\ApiKeyManager.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\WebServer\\ApiKeyManager.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\WebServer\\ApiKeyManager.cs",
+              "RelativeToolTip": "Site22Roleplay\\WebServer\\ApiKeyManager.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:15.544Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Plugin.cs",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Plugin.cs",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Plugin.cs",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Plugin.cs",
+              "RelativeToolTip": "Site22Roleplay\\Plugin.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAABEAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-25T07:37:00.714Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Site22Roleplay.csproj",
+              "DocumentMoniker": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Site22Roleplay.csproj",
+              "RelativeDocumentMoniker": "Site22Roleplay\\Site22Roleplay.csproj",
+              "ToolTip": "C:\\Users\\Ducstii\\source\\repos\\Site22Roleplay\\Site22Roleplay\\Site22Roleplay.csproj",
+              "RelativeToolTip": "Site22Roleplay\\Site22Roleplay.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-05-25T06:54:07.043Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
