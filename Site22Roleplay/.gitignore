@@ -1,0 +1,38 @@
+# Build artifacts
+[Dd]ebug/
+[Rr]elease/
+bin/
+obj/
+
+# Packages
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+#rider
+.idea/
+
+# vscode
+.vscode/
+
+# Visual Studio
+.vs/
+
+# nuget
+*.nupkg
+
+# Resharper
+*.dotCover*
+*.dotPeek*
+*.dotSettings
+*.dotSettings.user
+
+# Test results
+TestResults/
+
+# Any other files that should be ignored 
+
+# Backup files
+*~
+*.bak 
