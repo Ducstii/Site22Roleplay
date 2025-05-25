@@ -16,14 +16,8 @@ namespace Site22Roleplay.Config
         [Description("Whether to enable debug mode")]
         public bool Debug { get; set; } = false;
 
-        [Description("Discord bot token")]
-        public string DiscordBotToken { get; set; } = "your_discord_bot_token";
-
-        [Description("Discord server ID")]
-        public string DiscordServerId { get; set; } = "your_discord_server_id";
-
         [Description("Lobby spawn position")]
-        public Vector3 LobbySpawnPosition { get; set; } = new Vector3(0f, 0f, 0f);
+        public Vector3 LobbySpawnPosition { get; set; } = new Vector3(0, 0, 0);
 
         [Description("D-Class spawn position")]
         public Vector3 DClassSpawnPosition { get; set; } = new Vector3(0f, 0f, 0f);
@@ -40,14 +34,14 @@ namespace Site22Roleplay.Config
         [Description("Guard spawn position")]
         public Vector3 GuardSpawnPosition { get; set; } = new Vector3(0f, 0f, 0f);
 
-        [Description("Web server IP address")]
-        public string WebServerIp { get; set; } = "127.0.0.1";
+        [Description("Web Server IP")]
+        public string WebServerIp { get; set; } = "0.0.0.0";
 
-        [Description("Web server port")]
-        public int WebServerPort { get; set; } = 8080;
+        [Description("Web Server Port")]
+        public int WebServerPort { get; set; } = 5000;
 
-        [Description("Admin password for web interface")]
-        public string AdminPassword { get; set; } = "change_this_password";
+        [Description("Admin Password for Web Interface")]
+        public string AdminPassword { get; set; } = "your-admin-password";
 
         [Description("Enable/disable the shiv system")]
         public bool EnableShivSystem { get; set; } = true;
@@ -67,60 +61,63 @@ namespace Site22Roleplay.Config
         [Description("Role Limits Configuration")]
         public RoleLimitsConfig RoleLimits { get; set; } = new RoleLimitsConfig();
 
-        [Description("Door permissions configuration")]
-        public Dictionary<DoorType, Site22Roleplay.Models.Permissions> DoorPermissions { get; set; } = new Dictionary<DoorType, Site22Roleplay.Models.Permissions>()
-        {
-            { DoorType.HeavyContainmentDoor, new Site22Roleplay.Models.Permissions(overallLevel: -2) },
-            { DoorType.LightContainmentDoor, new Site22Roleplay.Models.Permissions(overallLevel: -2) },
-            { DoorType.EntranceDoor, new Site22Roleplay.Models.Permissions(overallLevel: -2) },
-            { DoorType.UnknownDoor, new Site22Roleplay.Models.Permissions(overallLevel: -2) },
+        [Description("Path to configs folder")]
+        public string ConfigsPath { get; set; } = "configs";
 
-            { DoorType.Scp330, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-            { DoorType.Scp914Gate, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-            { DoorType.GR18Inner, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-            { DoorType.Scp079First, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-            { DoorType.Scp079Second, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-
-            { DoorType.Scp096, new Site22Roleplay.Models.Permissions(overallLevel: 3, containmentLevel: 1) },
-            { DoorType.Scp106Primary, new Site22Roleplay.Models.Permissions(overallLevel: 3, containmentLevel: 1) },
-            { DoorType.Scp106Secondary, new Site22Roleplay.Models.Permissions(overallLevel: 3, containmentLevel: 1) },
-            { DoorType.Scp173Gate, new Site22Roleplay.Models.Permissions(overallLevel: 3, containmentLevel: 1) },
-            { DoorType.Scp173NewGate, new Site22Roleplay.Models.Permissions(overallLevel: 3, containmentLevel: 1) },
-            { DoorType.Scp049Gate, new Site22Roleplay.Models.Permissions(overallLevel: 3, containmentLevel: 1) },
-
-            { DoorType.Scp049Armory, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1, securityLevel: 1) },
-
-            { DoorType.CheckpointLczA, new Site22Roleplay.Models.Permissions(overallLevel: 1) },
-            { DoorType.CheckpointLczB, new Site22Roleplay.Models.Permissions(overallLevel: 1) },
-            { DoorType.CheckpointEzHczA, new Site22Roleplay.Models.Permissions(overallLevel: 1) },
-            { DoorType.CheckpointEzHczB, new Site22Roleplay.Models.Permissions(overallLevel: 1) },
-
-            { DoorType.CheckpointArmoryA, new Site22Roleplay.Models.Permissions(overallLevel: 1, securityLevel: 1) },
-            { DoorType.CheckpointArmoryB, new Site22Roleplay.Models.Permissions(overallLevel: 1, securityLevel: 1) },
-
-            { DoorType.GateA, new Site22Roleplay.Models.Permissions(overallLevel: 3, securityLevel: 1) },
-            { DoorType.GateB, new Site22Roleplay.Models.Permissions(overallLevel: 3, securityLevel: 1) },
-
-            { DoorType.PrisonDoor, new Site22Roleplay.Models.Permissions(overallLevel: 2, securityLevel: 1) },
-            { DoorType.HczArmory, new Site22Roleplay.Models.Permissions(overallLevel: 2, securityLevel: 1) },
-            { DoorType.LczArmory, new Site22Roleplay.Models.Permissions(overallLevel: 2, securityLevel: 1) },
-            { DoorType.NukeArmory, new Site22Roleplay.Models.Permissions(overallLevel: 2, securityLevel: 1) },
-            { DoorType.Scp079Armory, new Site22Roleplay.Models.Permissions(overallLevel: 2, securityLevel: 1) },
-
-            { DoorType.HIDChamber, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-            { DoorType.HIDUpper, new Site22Roleplay.Models.Permissions(overallLevel: 2, containmentLevel: 1) },
-
-            { DoorType.Intercom, new Site22Roleplay.Models.Permissions(overallLevel: 4) },
-
-            { DoorType.NukeSurface, new Site22Roleplay.Models.Permissions(overallLevel: 5, containmentLevel: 1, securityLevel: 1) },
-            { DoorType.LczCafe, new Site22Roleplay.Models.Permissions(overallLevel: -1) }
-        };
-
-        [Description("Path to the directory containing audio files. This path is relative to the EXILED config directory.")]
-        public string AudioFolderPath { get; set; } = "Site22Roleplay/audios";
+        [Description("Path to audio folder relative to configs")]
+        public string AudioFolderPath { get; set; } = "audio";
 
         [Description("File name for the warp audio effect (should be in the AudioFolderPath).")]
         public string WarpAudioFileName { get; set; } = "warp_audio.wav";
+
+        [Description("Door permissions configuration")]
+        public Dictionary<DoorType, Models.Permissions> DoorPermissions { get; set; } = new Dictionary<DoorType, Models.Permissions>
+        {
+            DoorType.HeavyContainmentDoor => new Models.Permissions(Level: -2),
+            DoorType.LightContainmentDoor => new Models.Permissions(Level: -2),
+            DoorType.EntranceDoor => new Models.Permissions(Level: -2),
+            DoorType.UnknownDoor => new Models.Permissions(Level: -2),
+
+            DoorType.Scp330 => new Models.Permissions(Level: 2, Levels.Containment),
+            DoorType.Scp914Gate => new Models.Permissions(Level: 2, Levels.Containment),
+            DoorType.GR18Inner => new Models.Permissions(Level: 2, Levels.Containment),
+            DoorType.Scp079First => new Models.Permissions(Level: 2, Levels.Containment),
+            DoorType.Scp079Second => new Models.Permissions(Level: 2, Levels.Containment),
+
+            DoorType.Scp096 => new Models.Permissions(Level: 3, Levels.Containment),
+            DoorType.Scp106Primary => new Models.Permissions(Level: 3, Levels.Containment),
+            DoorType.Scp106Secondary => new Models.Permissions(Level: 3, Levels.Containment),
+            DoorType.Scp173Gate => new Models.Permissions(Level: 3, Levels.Containment),
+            DoorType.Scp173NewGate => new Models.Permissions(Level: 3, Levels.Containment),
+            DoorType.Scp049Gate => new Models.Permissions(Level: 3, Levels.Containment),
+
+            DoorType.Scp049Armory => new Models.Permissions(Level: 2, Levels.Containment, Levels.Security),
+
+            DoorType.CheckpointLczA => new Models.Permissions(Level: 1),
+            DoorType.CheckpointLczB => new Models.Permissions(Level: 1),
+            DoorType.CheckpointEzHczA => new Models.Permissions(Level: 1),
+            DoorType.CheckpointEzHczB => new Models.Permissions(Level: 1),
+
+            DoorType.CheckpointArmoryA => new Models.Permissions(Level: 1, Levels.Security),
+            DoorType.CheckpointArmoryB => new Models.Permissions(Level: 1, Levels.Security),
+
+            DoorType.GateA => new Models.Permissions(Level: 3, Levels.Security, requiredCustomAccessLevels: new List<string> { "gateaccess" }),
+            DoorType.GateB => new Models.Permissions(Level: 3, Levels.Security, requiredCustomAccessLevels: new List<string> { "gateaccess" }),
+
+            DoorType.PrisonDoor => new Models.Permissions(Level: 2, Levels.Security),
+            DoorType.HczArmory => new Models.Permissions(Level: 2, Levels.Security),
+            DoorType.LczArmory => new Models.Permissions(Level: 2, Levels.Security),
+            DoorType.NukeArmory => new Models.Permissions(Level: 2, Levels.Security),
+            DoorType.Scp079Armory => new Models.Permissions(Level: 2, Levels.Security),
+
+            DoorType.HIDChamber => new Models.Permissions(Level: 2, Levels.Containment),
+            DoorType.HIDUpper => new Models.Permissions(Level: 2, Levels.Containment),
+
+            DoorType.Intercom => new Models.Permissions(Level: 4),
+
+            DoorType.NukeSurface => new Models.Permissions(Level: 5, Levels.Containment, Levels.Engineering, Levels.Security),
+
+        };
     }
 
     public class ShivConfig

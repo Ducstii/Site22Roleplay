@@ -6,7 +6,6 @@ using MEC;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Server;
 using Exiled.API.Interfaces;
-using Discord.WebSocket;
 
 namespace Site22Roleplay.Features.SMS
 {
@@ -22,12 +21,12 @@ namespace Site22Roleplay.Features.SMS
             Exiled.Events.Handlers.Player.Verified += OnPlayerVerified;
         }
 
-        private void OnPlayerVerified(Exiled.Events.EventArgs.VerifiedEventArgs ev)
+        private void OnPlayerVerified(VerifiedEventArgs ev)
         {
             AssignPhoneNumber(ev.Player);
         }
 
-        private void OnPlayerLeft(Exiled.Events.EventArgs.LeftEventArgs ev)
+        private void OnPlayerLeft(LeftEventArgs ev)
         {
             if (_playerPhones.TryGetValue(ev.Player, out string number))
             {

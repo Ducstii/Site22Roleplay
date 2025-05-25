@@ -11,6 +11,12 @@ using Newtonsoft.Json;
 using Site22Roleplay.Models;
 using System.Web;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
+using Site22Roleplay.Web.Models;
+using Site22Roleplay.Clients;
+using PlayerRoles;
+using PlayerRoles.FirstPersonControl;
+using PlayerRoles.Voice;
 
 namespace Site22Roleplay.WebServer
 {
@@ -21,12 +27,14 @@ namespace Site22Roleplay.WebServer
         private readonly int _port;
         private readonly string _adminPassword;
         private readonly Dictionary<string, Department> _departments;
-        private readonly List<DiscordRole> _discordRoles;
-        private const string LoadoutsFile = "loadouts.json";
         private const string UsersFile = "users.json";
+        private const string RosterFile = "roster.json";
+        private const string DepartmentsFile = "departments.json";
 
         private readonly Dictionary<string, User> _sessions;
         private Users _usersData;
+        private Dictionary<string, RosterEntry> _roster;
+        private bool _isRunning;
 
         public WebServer(string ipAddress, int port, string adminPassword)
         {
@@ -34,17 +42,16 @@ namespace Site22Roleplay.WebServer
             _port = port;
             _adminPassword = adminPassword;
             _departments = new Dictionary<string, Department>();
-            _discordRoles = new List<DiscordRole>();
             _sessions = new Dictionary<string, User>();
             _usersData = new Users();
+            _roster = new Dictionary<string, RosterEntry>();
 
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://{_ipAddress}:{_port}/");
 
             LoadDepartments();
-            LoadDiscordRoles();
-            LoadLoadouts();
             LoadUsers();
+            LoadRoster();
 
             if (_usersData.SavedUsers == null || !_usersData.SavedUsers.Any())
             {
@@ -53,33 +60,11 @@ namespace Site22Roleplay.WebServer
             }
         }
 
-        private void LoadDiscordRoles()
-        {
-            try
-            {
-                // Assuming Plugin.Instance._discordClient is available and works
-                // var roles = Plugin.Instance._discordClient.GetGuildRoles();
-                // _discordRoles = roles.Select(r => new DiscordRole { Id = r.Id, Name = r.Name }).ToList();
-
-                // Placeholder if Discord client is not integrated yet
-                _discordRoles = new List<DiscordRole>
-                {
-                    new DiscordRole { Id = 123456789, Name = "Placeholder Role 1" },
-                    new DiscordRole { Id = 987654321, Name = "Placeholder Role 2" }
-                };
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error loading Discord roles: {ex.Message}");
-                _discordRoles = new List<DiscordRole>();
-            }
-        }
-
         private void LoadDepartments()
         {
             try
             {
-                string departmentsFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", "departments.json");
+                string departmentsFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", DepartmentsFile);
                 if (File.Exists(departmentsFilePath))
                 {
                     _departments = JsonConvert.DeserializeObject<Dictionary<string, Department>>(File.ReadAllText(departmentsFilePath));
@@ -87,9 +72,6 @@ namespace Site22Roleplay.WebServer
                 else
                 {
                     _departments = new Dictionary<string, Department>();
-                    // Create a default department if file doesn't exist
-                    _departments["Default"] = new Department { Name = "Default", Password = "defaultpass", Roles = new List<string>() };
-                    SaveDepartments(); // Save the default department
                 }
             }
             catch (Exception ex)
@@ -99,70 +81,131 @@ namespace Site22Roleplay.WebServer
             }
         }
 
-        public void SaveDepartments()
+        private async Task AddDepartment(HttpListenerRequest request, HttpListenerResponse response)
         {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<DepartmentRequest>(body);
+
+            if (string.IsNullOrEmpty(data.Name) || string.IsNullOrEmpty(data.Password))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name and password are required" });
+                return;
+            }
+
+            if (_departments.ContainsKey(data.Name))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department already exists" });
+                return;
+            }
+
             try
             {
-                string departmentsFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", "departments.json");
-                string directory = Path.GetDirectoryName(departmentsFilePath);
-                if (!Directory.Exists(directory))
+                // Create department directory structure
+                string basePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", "Departments", data.Name);
+                CreateDepartmentDirectories(basePath);
+
+                _departments[data.Name] = new Department
                 {
-                    Directory.CreateDirectory(directory);
-                }
-                File.WriteAllText(departmentsFilePath, JsonConvert.SerializeObject(_departments, Formatting.Indented));
+                    Name = data.Name,
+                    Password = data.Password,
+                    Roles = new List<DepartmentRole>(),
+                    Members = new List<DepartmentMember>(),
+                    RankCategories = new List<RankCategory>(),
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = GetCurrentUser(request)?.Username ?? "Unknown"
+                };
+                SaveDepartments();
+
+                await WriteResponse(response, new { success = true });
             }
             catch (Exception ex)
             {
-                Log.Error($"Error saving departments: {ex.Message}");
+                Log.Error($"Error creating department: {ex.Message}");
+                response.StatusCode = 500;
+                await WriteResponse(response, new { error = "Failed to create department" });
             }
         }
 
-        private void LoadLoadouts()
+        private async Task EditDepartment(HttpListenerRequest request, HttpListenerResponse response)
         {
-            try
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<DepartmentRequest>(body);
+
+            if (string.IsNullOrEmpty(data.Name))
             {
-                string loadoutsFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", LoadoutsFile);
-                if (File.Exists(loadoutsFilePath))
-                {
-                    var loadouts = JsonConvert.DeserializeObject<Dictionary<string, RolePreset>>(File.ReadAllText(loadoutsFilePath));
-                    if (loadouts != null)
-                    {
-                        Plugin.Instance.RolePresets.Clear();
-                        foreach (var loadout in loadouts)
-                        {
-                            Plugin.Instance.RolePresets[loadout.Key] = loadout.Value;
-                        }
-                        Log.Info($"Loaded {loadouts.Count} loadouts from {loadoutsFilePath}");
-                    }
-                }
-                else
-                {
-                    Plugin.Instance.RolePresets.Clear();
-                }
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name is required" });
+                return;
             }
-            catch (Exception ex)
+
+            if (_departments.TryGetValue(data.Name, out var department))
             {
-                Log.Error($"Error loading loadouts: {ex.Message}");
+                if (!string.IsNullOrEmpty(data.Password))
+                    department.Password = data.Password;
+                
+                if (data.Roles != null)
+                    department.Roles = data.Roles;
+                
+                department.LastModified = DateTime.UtcNow;
+                department.ModifiedBy = GetCurrentUser(request)?.Username ?? "Unknown";
+                
+                SaveDepartments();
+                await WriteResponse(response, new { success = true });
+            }
+            else
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Department not found" });
             }
         }
 
-        public void SaveLoadouts()
+        private User GetCurrentUser(HttpListenerRequest request)
         {
-            try
+            var sessionIdCookie = request.Cookies["sessionId"];
+            if (sessionIdCookie != null && _sessions.TryGetValue(sessionIdCookie.Value, out var user))
             {
-                string loadoutsFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", LoadoutsFile);
-                string directory = Path.GetDirectoryName(loadoutsFilePath);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-                File.WriteAllText(loadoutsFilePath, JsonConvert.SerializeObject(Plugin.Instance.RolePresets, Formatting.Indented));
-                Log.Info($"Saved {Plugin.Instance.RolePresets.Count} loadouts to {loadoutsFilePath}");
+                return user;
             }
-            catch (Exception ex)
-            {
-                Log.Error($"Error saving loadouts: {ex.Message}");
-            }
+            return null;
+        }
+
+        public class Department
+        {
+            public string Name { get; set; }
+            public string Password { get; set; }
+            public List<DepartmentRole> Roles { get; set; }
+            public List<DepartmentMember> Members { get; set; }
+            public List<RankCategory> RankCategories { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public string CreatedBy { get; set; }
+            public DateTime? LastModified { get; set; }
+            public string ModifiedBy { get; set; }
+            public string HeaderColor { get; set; } = "#ff6b00"; // Default color for department header
+        }
+
+        public class DepartmentRole
+        {
+            public string Name { get; set; }
+            public string Category { get; set; }
+            public RoleTypeId GameRole { get; set; }
+            public string ServerInfo { get; set; }
+        }
+
+        public class DepartmentMember
+        {
+            public string SteamId { get; set; }
+            public string Role { get; set; }
+            public DateTime JoinedAt { get; set; }
+            public string AddedBy { get; set; }
+        }
+
+        public class DepartmentRequest
+        {
+            public string Name { get; set; }
+            public string Password { get; set; }
+            public List<DepartmentRole> Roles { get; set; }
         }
 
         private void LoadUsers()
@@ -215,26 +258,80 @@ namespace Site22Roleplay.WebServer
             }
         }
 
+        private void LoadRoster()
+        {
+            try
+            {
+                string rosterFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", RosterFile);
+                if (File.Exists(rosterFilePath))
+                {
+                    _roster = JsonConvert.DeserializeObject<Dictionary<string, RosterEntry>>(File.ReadAllText(rosterFilePath));
+                }
+                else
+                {
+                    _roster = new Dictionary<string, RosterEntry>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error loading roster: {ex.Message}");
+                _roster = new Dictionary<string, RosterEntry>();
+            }
+        }
+
+        private void SaveRoster()
+        {
+            try
+            {
+                string rosterFilePath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", RosterFile);
+                string directory = Path.GetDirectoryName(rosterFilePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                File.WriteAllText(rosterFilePath, JsonConvert.SerializeObject(_roster, Formatting.Indented));
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error saving roster: {ex.Message}");
+            }
+        }
+
         public void Start()
         {
+            if (_isRunning) return;
+            _isRunning = true;
             _listener.Start();
-            _listener.BeginGetContext(OnRequest, null);
+            Task.Run(ListenForRequests);
             Log.Info($"Webserver has been launched, access it at http://{_ipAddress}:{_port}");
         }
 
         public void Stop()
         {
+            if (!_isRunning) return;
+            _isRunning = false;
             _listener.Stop();
             Log.Info("Webserver has been stopped");
         }
 
-        private void OnRequest(IAsyncResult result)
+        private async Task ListenForRequests()
         {
-            if (!_listener.IsListening) return;
+            while (_isRunning)
+            {
+                try
+                {
+                    var context = await _listener.GetContextAsync();
+                    _ = HandleRequest(context);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error handling web request: {ex.Message}");
+                }
+            }
+        }
 
-            var context = _listener.EndGetContext(result);
-            _listener.BeginGetContext(OnRequest, null);
-
+        private async Task HandleRequest(HttpListenerContext context)
+        {
             var request = context.Request;
             var response = context.Response;
 
@@ -242,90 +339,59 @@ namespace Site22Roleplay.WebServer
             {
                 switch (request.Url.AbsolutePath)
                 {
-                    case "/api/loadouts" when request.HttpMethod == "GET":
-                        GetLoadouts(request, response);
-                        break;
-                    case "/api/loadouts" when request.HttpMethod == "POST":
-                        SaveLoadout(request, response);
-                        break;
-                    case "/api/loadouts" when request.HttpMethod == "DELETE":
-                        DeleteLoadout(request, response);
-                        break;
-                    case "/api/departments" when request.HttpMethod == "GET":
-                        GetDepartments(request, response);
-                        break;
-                    case "/api/departments" when request.HttpMethod == "POST":
-                        CreateDepartment(request, response);
-                        break;
-                    case "/api/departments" when request.HttpMethod == "DELETE":
-                        DeleteDepartment(request, response);
-                        break;
-                    case "/api/discord-roles" when request.HttpMethod == "GET":
-                        GetDiscordRoles(request, response);
-                        break;
-                    // New endpoints from example plugin
-                    case "/roster/availablePlayers" when request.HttpMethod == "GET":
+                    case "/players/available":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
                         GetAvailablePlayers(request, response);
                         break;
-                    case "/roster/addPlayer" when request.HttpMethod == "POST":
+                    case "/departments/members/add":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        AddPlayerToDepartment(request, response);
+                        await AddMemberToDepartment(request, response);
                         break;
-                    case "/roster/editPlayer" when request.HttpMethod == "POST":
+                    case "/departments/members/remove":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        EditPlayer(request, response);
+                        await RemoveMemberFromDepartment(request, response);
                         break;
-                    case "/roster/removePlayer" when request.HttpMethod == "POST":
+                    case "/departments":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        RemovePlayer(request, response);
+                        GetDepartments(request, response);
                         break;
-                    case "/roster" when request.HttpMethod == "GET":
+                    case "/departments/add":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        GetRoster(request, response);
+                        await AddDepartment(request, response);
                         break;
-                    case "/shop/roles-and-ranks" when request.HttpMethod == "GET":
+                    case "/departments/remove":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        GetRolesAndRanks(request, response);
+                        await RemoveDepartment(request, response);
                         break;
-                    case "/department/removeRole" when request.HttpMethod == "POST":
+                    case "/departments/edit":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        RemoveRole(request, response);
+                        await EditDepartment(request, response);
                         break;
-                    case "/department/addRole" when request.HttpMethod == "POST":
+                    case "/departments/categories/add":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        AddRole(request, response);
+                        await AddRankCategory(request, response);
                         break;
-                    case "/department/setRole" when request.HttpMethod == "POST":
+                    case "/departments/categories/edit":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        SetRole(request, response);
+                        await EditRankCategory(request, response);
                         break;
-                    case "/department/roles" when request.HttpMethod == "GET":
+                    case "/departments/categories/remove":
                         if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        GetAllRoles(request, response);
+                        await RemoveRankCategory(request, response);
                         break;
-                    case "/login" when request.HttpMethod == "POST":
+                    case "/login":
                         HandleLogin(request, response);
                         break;
-                    case "/home/session" when request.HttpMethod == "GET":
-                        if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        ServeHomeSession(request, response);
+                    case "/logout":
+                        HandleLogout(request, response);
                         break;
-                    case "/home/balance" when request.HttpMethod == "GET":
-                        if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        ServeHomeBalance(request, response);
-                        break;
-                    case "/home" when request.HttpMethod == "GET":
+                    case "/home":
                         if (IsAuthorized(request))
                             ServeFile(response, "admin.html");
                         else
                             Redirect(response, "/");
                         break;
-                    case "/getBypass" when request.HttpMethod == "GET":
-                        if (!IsAuthorized(request)) { Redirect(response, "/"); return; }
-                        ServeGetBypass(request, response);
-                        break;
-                    case "/" when request.HttpMethod == "GET":
+                    case "/":
                         ServeFile(response, "login.html");
                         break;
                     default:
@@ -335,318 +401,191 @@ namespace Site22Roleplay.WebServer
             }
             catch (Exception ex)
             {
-                Log.Error($"Error handling request to {request.Url.AbsolutePath}: {ex.Message}\n{ex.StackTrace}");
-                ServeServerError(response);
+                Log.Error($"Error processing request: {ex.Message}");
+                response.StatusCode = 500;
+                await WriteResponse(response, new { error = "Internal server error" });
+            }
+            finally
+            {
+                response.Close();
             }
         }
-
-        private void GetLoadouts(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            var json = JsonConvert.SerializeObject(Plugin.Instance.RolePresets, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(json);
-            response.ContentLength64 = buffer.Length;
-            response.ContentType = "application/json";
-            response.OutputStream.Write(buffer, 0, buffer.Length);
-            response.OutputStream.Close();
-        }
-
-        private void SaveLoadout(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
-            var body = reader.ReadToEnd();
-            var loadout = JsonConvert.DeserializeObject<RolePreset>(body);
-
-            if (loadout == null || string.IsNullOrEmpty(loadout.Name))
-            {
-                SendResponse(response, "Invalid loadout data.", HttpStatusCode.BadRequest);
-                return;
-            }
-
-            Plugin.Instance.RolePresets[loadout.Name] = loadout;
-            SaveLoadouts();
-
-            SendResponse(response, "Loadout saved successfully.", HttpStatusCode.OK);
-        }
-
-        private void DeleteLoadout(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
-            var body = reader.ReadToEnd();
-            var requestData = JsonConvert.DeserializeObject<DeleteLoadoutRequest>(body);
-
-            if (string.IsNullOrEmpty(requestData?.Name))
-            {
-                SendResponse(response, "Invalid request data.", HttpStatusCode.BadRequest);
-                return;
-            }
-
-            if (Plugin.Instance.RolePresets.Remove(requestData.Name))
-            {
-                SaveLoadouts();
-                SendResponse(response, "Loadout deleted successfully.", HttpStatusCode.OK);
-            }
-            else
-            {
-                SendResponse(response, "Loadout not found.", HttpStatusCode.NotFound);
-            }
-        }
-
-        private void GetDepartments(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            var json = JsonConvert.SerializeObject(_departments, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(json);
-            response.ContentLength64 = buffer.Length;
-            response.ContentType = "application/json";
-            response.OutputStream.Write(buffer, 0, buffer.Length);
-            response.OutputStream.Close();
-        }
-
-        private void CreateDepartment(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
-            var body = reader.ReadToEnd();
-            var department = JsonConvert.DeserializeObject<Department>(body);
-
-            if (department == null || string.IsNullOrEmpty(department.Name))
-            {
-                SendResponse(response, "Invalid department data.", HttpStatusCode.BadRequest);
-                return;
-            }
-
-            if (_departments.ContainsKey(department.Name))
-            {
-                SendResponse(response, "Department with this name already exists.", HttpStatusCode.Conflict);
-                return;
-            }
-
-            _departments[department.Name] = department;
-            SaveDepartments();
-
-            SendResponse(response, "Department created successfully.", HttpStatusCode.Created);
-        }
-
-        private void DeleteDepartment(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
-            var body = reader.ReadToEnd();
-            var requestData = JsonConvert.DeserializeObject<DeleteDepartmentRequest>(body);
-
-            if (string.IsNullOrEmpty(requestData?.Name))
-            {
-                SendResponse(response, "Invalid request data.", HttpStatusCode.BadRequest);
-                return;
-            }
-
-            if (_departments.Remove(requestData.Name))
-            {
-                SaveDepartments();
-                SendResponse(response, "Department deleted successfully.", HttpStatusCode.OK);
-            }
-            else
-            {
-                SendResponse(response, "Department not found.", HttpStatusCode.NotFound);
-            }
-        }
-
-        private void GetDiscordRoles(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            var json = JsonConvert.SerializeObject(_discordRoles, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(json);
-            response.ContentLength64 = buffer.Length;
-            response.ContentType = "application/json";
-            response.OutputStream.Write(buffer, 0, buffer.Length);
-            response.OutputStream.Close();
-        }
-
-        // --- New Methods from Example Plugin ---
 
         private void GetAvailablePlayers(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // *** Placeholder: Implement logic to get players not assigned to a department ***
-            // This will require accessing your plugin's player data management.
-            var availablePlayers = new List<object>();
-            SendResponse(response, JsonConvert.SerializeObject(availablePlayers, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Available players requested.", "");
+            var players = Player.List
+                .Where(p => !p.IsHost)
+                .Select(p => new
+                {
+                    Id = p.UserId,
+                    Name = p.Nickname,
+                    Role = p.Role.ToString()
+                })
+                .ToList();
+
+            var json = JsonConvert.SerializeObject(players);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            response.ContentLength64 = buffer.Length;
+            response.ContentType = "application/json";
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+            response.OutputStream.Close();
         }
 
-        private void AddPlayerToDepartment(HttpListenerRequest request, HttpListenerResponse response)
+        private async Task AddPlayerToRoster(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // *** Placeholder: Implement logic to add a player to a department ***
-            // Read request body, find the player, add to department data, save data.
-            SendResponse(response, "AddPlayerToDepartment endpoint not fully implemented.", HttpStatusCode.NotImplemented);
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Add player requested.", "");
-        }
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<AddPlayerRequest>(body);
 
-        private void EditPlayer(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to edit player data (roles, hours) ***
-            // Read request body, find the player, update data, save data.
-            SendResponse(response, "EditPlayer endpoint not fully implemented.", HttpStatusCode.NotImplemented);
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Edit player requested.", "");
-        }
+            if (string.IsNullOrEmpty(data.SteamId))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Steam ID is required" });
+                return;
+            }
 
-        private void RemovePlayer(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to remove a player from a department ***
-            // Read request body, find the player, remove from department data, save data.
-            SendResponse(response, "RemovePlayer endpoint not fully implemented.", HttpStatusCode.NotImplemented);
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Remove player requested.", "");
+            var player = Player.Get(data.SteamId);
+            if (player == null)
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Player not found" });
+                return;
+            }
+
+            if (_roster.ContainsKey(data.SteamId))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Player already in roster" });
+                return;
+            }
+
+            _roster[data.SteamId] = new RosterEntry
+            {
+                SteamId = data.SteamId,
+                Rank = "Recruit",
+                AddedAt = DateTime.UtcNow
+            };
+            SaveRoster();
+
+            await WriteResponse(response, new { success = true });
         }
 
         private void GetRoster(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // *** Placeholder: Implement logic to get players in the user's department ***
-            // Get user's department from session, filter players by department.
-            var rosterPlayers = new List<object>();
-            SendResponse(response, JsonConvert.SerializeObject(rosterPlayers, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Roster requested.", "");
-        }
-
-        private void GetRolesAndRanks(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to get roles and ranks for the user's department ***
-            // Get user's department from session, retrieve roles and ranks data.
-            var rolesAndRanks = new List<object>();
-            SendResponse(response, JsonConvert.SerializeObject(rolesAndRanks, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Roles and ranks requested.", "");
-        }
-
-        private void RemoveRole(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to remove a role from a department ***
-            // Read request body, get user's department, remove the role, save departments.
-            SendResponse(response, "RemoveRole endpoint not fully implemented.", HttpStatusCode.NotImplemented);
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Remove role requested.", "");
-        }
-
-        private void AddRole(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to add a role to a department ***
-            // Read request body, get user's department, add the role, save departments.
-            SendResponse(response, "AddRole endpoint not fully implemented.", HttpStatusCode.NotImplemented);
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Add role requested.", "");
-        }
-
-        private void SetRole(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to set/update a role's details in a department ***
-            // Read request body, get user's department, find and update the role, save departments.
-            SendResponse(response, "SetRole endpoint not fully implemented.", HttpStatusCode.NotImplemented);
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Set role requested.", "");
-        }
-
-        private void GetAllRoles(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to get all roles for the user's department ***
-            // Get user's department from session, return all roles in that department.
-            var allRoles = new List<object>();
-            SendResponse(response, JsonConvert.SerializeObject(allRoles, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(GetUserFromSession(request)?.Username, GetUserFromSession(request)?.Department, "Get all roles requested.", "");
-        }
-
-        private void ServeHomeSession(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to return basic user/session data for the home page ***
-            var user = GetUserFromSession(request);
-            var responseData = new
+            var roster = _roster.Values.Select(entry => new
             {
-                hasSecurityAccess = false,
-                department = user?.Department
-            };
-            SendResponse(response, JsonConvert.SerializeObject(responseData, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(user?.Username, user?.Department, "Home session data requested.", "");
+                SteamId = entry.SteamId,
+                Rank = entry.Rank,
+                AddedAt = entry.AddedAt
+            }).ToList();
+
+            var json = JsonConvert.SerializeObject(roster);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            response.ContentLength64 = buffer.Length;
+            response.ContentType = "application/json";
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+            response.OutputStream.Close();
         }
 
-        private void ServeHomeBalance(HttpListenerRequest request, HttpListenerResponse response)
+        private void GetRanks(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // *** Placeholder: Implement logic to return department balance ***
-            var user = GetUserFromSession(request);
-            decimal balance = 0;
-            if (user != null && _departments.TryGetValue(user.Department, out var department))
+            var ranks = new[] { "Recruit", "Private", "Corporal", "Sergeant", "Lieutenant", "Captain" };
+            var json = JsonConvert.SerializeObject(ranks);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            response.ContentLength64 = buffer.Length;
+            response.ContentType = "application/json";
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+            response.OutputStream.Close();
+        }
+
+        private async Task SetPlayerRank(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<SetRankRequest>(body);
+
+            if (string.IsNullOrEmpty(data.SteamId) || string.IsNullOrEmpty(data.Rank))
             {
-                // Assuming Department class has a Balance property
-                // balance = department.Balance;
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Steam ID and Rank are required" });
+                return;
             }
-            SendResponse(response, JsonConvert.SerializeObject(balance, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(user?.Username, user?.Department, "Home balance requested.", "");
-        }
 
-        private void ServeGetBypass(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            // *** Placeholder: Implement logic to return user bypass status ***
-            var user = GetUserFromSession(request);
-            var bypass = new
+            if (_roster.TryGetValue(data.SteamId, out var entry))
             {
-                isBypass = user?.IsBypass ?? false,
-            };
-            SendResponse(response, JsonConvert.SerializeObject(bypass, Formatting.Indented), HttpStatusCode.OK, "application/json");
-            LogUserAction(user?.Username, user?.Department, "Get bypass requested.", "");
+                entry.Rank = data.Rank;
+                SaveRoster();
+                await WriteResponse(response, new { success = true });
+            }
+            else
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Player not found in roster" });
+            }
         }
 
-        private User GetUserFromSession(HttpListenerRequest request)
+        private async Task RemovePlayerFromRoster(HttpListenerRequest request, HttpListenerResponse response)
         {
-            var sessionIdCookie = request.Cookies["sessionId"];
-            if (sessionIdCookie == null || string.IsNullOrEmpty(sessionIdCookie.Value)) return null;
-            _sessions.TryGetValue(sessionIdCookie.Value, out var user);
-            return user;
-        }
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<RemovePlayerRequest>(body);
 
-        // --- Authentication and Authorization ---
+            if (string.IsNullOrEmpty(data.SteamId))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Steam ID is required" });
+                return;
+            }
+
+            if (_roster.Remove(data.SteamId))
+            {
+                SaveRoster();
+                await WriteResponse(response, new { success = true });
+            }
+            else
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Player not found in roster" });
+            }
+        }
 
         private void HandleLogin(HttpListenerRequest request, HttpListenerResponse response)
         {
-            try
+            if (request.HttpMethod != "POST")
             {
-                using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
-                var body = reader.ReadToEnd();
-                var loginRequest = JsonConvert.DeserializeObject<LoginRequest>(body);
-
-                if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Password))
-                {
-                    SendResponse(response, "Invalid login request.", HttpStatusCode.BadRequest);
-                    return;
-                }
-
-                if (IsValidUser(loginRequest.Password))
-                {
-                    var sessionId = Guid.NewGuid().ToString();
-                    var user = _usersData.SavedUsers.FirstOrDefault(entry => entry.Password == loginRequest.Password);
-                    if (user != null)
-                    {
-                        var oldSessions = _sessions.Where(s => s.Value == user).ToList();
-                        foreach (var oldSession in oldSessions) { _sessions.Remove(oldSession.Key); }
-
-                        _sessions[sessionId] = user;
-
-                        var cookie = new Cookie("sessionId", sessionId) { HttpOnly = true };
-                        response.Cookies.Add(cookie);
-
-                        SendResponse(response, "Login successful.", HttpStatusCode.OK);
-                        LogUserAction(user.Username, user.Department, "User logged in.", user.Password);
-                    }
-                    else
-                    {
-                        SendResponse(response, "User not found after validation.", HttpStatusCode.InternalServerError);
-                    }
-                }
-                else
-                {
-                    SendResponse(response, "Invalid password.", HttpStatusCode.Unauthorized);
-                }
+                response.StatusCode = 405;
+                return;
             }
-            catch (Exception ex)
+
+            using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
+            var body = reader.ReadToEnd();
+            var loginData = JsonConvert.DeserializeObject<LoginRequest>(body);
+
+            if (IsValidUser(loginData.Username, loginData.Password))
             {
-                Log.Error($"Error handling login: {ex.Message}");
-                SendResponse(response, "Internal server error during login.", HttpStatusCode.InternalServerError);
+                var sessionId = Guid.NewGuid().ToString();
+                _sessions[sessionId] = _usersData.SavedUsers.First(u => u.Username == loginData.Username);
+
+                var cookie = new Cookie("sessionId", sessionId);
+                response.Cookies.Add(cookie);
+
+                Redirect(response, "/home");
+            }
+            else
+            {
+                Redirect(response, "/");
             }
         }
 
-        private bool IsValidUser(string inputPassword)
+        private void HandleLogout(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // In a real application, hash and compare passwords securely.
-            // For this example, we're doing a plain text comparison (NOT SECURE).
-            return _usersData.SavedUsers.Any(entry => entry.Password == inputPassword);
+            var sessionIdCookie = request.Cookies["sessionId"];
+            if (sessionIdCookie != null)
+            {
+                _sessions.Remove(sessionIdCookie.Value);
+            }
+            Redirect(response, "/");
         }
+
+        private bool IsValidUser(string username, string password) => 
+            _usersData.SavedUsers.Any(u => u.Username == username && u.Password == password);
 
         private bool IsAuthorized(HttpListenerRequest request)
         {
@@ -662,8 +601,6 @@ namespace Site22Roleplay.WebServer
 
             return true;
         }
-
-        // --- Helper Methods ---
 
         private static void Redirect(HttpListenerResponse response, string url)
         {
@@ -723,12 +660,12 @@ namespace Site22Roleplay.WebServer
             catch (Exception ex)
             {
                 Log.Error($"Error sending response: {ex.Message}");
-                try { response.StatusCode = (int)HttpStatusCode.InternalServerError; } catch { } // Avoid errors if headers sent
+                try { response.StatusCode = (int)HttpStatusCode.InternalServerError; } catch { }
             }
             finally
             {
-                try { response.OutputStream.Close(); } catch { } // Ensure stream is closed
-                try { response.Close(); } catch { } // Ensure response is closed
+                try { response.OutputStream.Close(); } catch { }
+                try { response.Close(); } catch { }
             }
         }
 
@@ -745,24 +682,148 @@ namespace Site22Roleplay.WebServer
             };
         }
 
-        private readonly string _webhookUrl = Plugin.Singleton.Config.URL; // Assuming URL is in your config
-
-        public void LogUserAction(string username, string department, string action, string obfuscatedPassword)
+        private async Task<string> ReadRequestBody(HttpListenerRequest request)
         {
-            Log.Info($"WEB ACTION - User: {username}, Department: {department}, Action: {action}");
-            if (!string.IsNullOrEmpty(_webhookUrl) && _webhookUrl != "your_discord_webhook_url")
+            using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
+            return await reader.ReadToEndAsync();
+        }
+
+        private async Task WriteResponse(HttpListenerResponse response, object data)
+        {
+            var json = JsonConvert.SerializeObject(data);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            response.ContentType = "application/json";
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        private void GetDepartments(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var departments = _departments.Select(d => new
             {
-                // Implement webhook posting logic here if needed
+                Name = d.Key,
+                Password = d.Value.Password,
+                Roles = d.Value.Roles
+            }).ToList();
+
+            var json = JsonConvert.SerializeObject(departments);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            response.ContentLength64 = buffer.Length;
+            response.ContentType = "application/json";
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+            response.OutputStream.Close();
+        }
+
+        private async Task RemoveDepartment(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<DepartmentRequest>(body);
+
+            if (string.IsNullOrEmpty(data.Name))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name is required" });
+                return;
+            }
+
+            try
+            {
+                // Remove department directory
+                string departmentPath = Path.Combine(Exiled.API.Features.Paths.Configs, "Site22Roleplay", "Departments", data.Name);
+                if (Directory.Exists(departmentPath))
+                {
+                    Directory.Delete(departmentPath, true);
+                }
+
+                if (_departments.Remove(data.Name))
+                {
+                    SaveDepartments();
+                    await WriteResponse(response, new { success = true });
+                }
+                else
+                {
+                    response.StatusCode = 404;
+                    await WriteResponse(response, new { error = "Department not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error removing department directories: {ex.Message}");
+                response.StatusCode = 500;
+                await WriteResponse(response, new { error = "Failed to remove department structure" });
             }
         }
 
-        private void PostWebhook(string url, object payload)
+        private void CreateDepartmentDirectories(string basePath)
         {
-            // Implement actual HTTP POST request to the webhook URL
-            // Be careful with async/await in HttpListener context, might need a separate task.
+            // Create main department directory
+            Directory.CreateDirectory(basePath);
+
+            // Create subdirectories for different purposes
+            Directory.CreateDirectory(Path.Combine(basePath, "Roster"));
+            Directory.CreateDirectory(Path.Combine(basePath, "Roles"));
+            Directory.CreateDirectory(Path.Combine(basePath, "Loadouts"));
+            Directory.CreateDirectory(Path.Combine(basePath, "Documents"));
+
+            // Create initial files
+            File.WriteAllText(Path.Combine(basePath, "Roster", "members.json"), "[]");
+            File.WriteAllText(Path.Combine(basePath, "Roles", "roles.json"), "[]");
+            File.WriteAllText(Path.Combine(basePath, "Loadouts", "loadouts.json"), "{}");
+            File.WriteAllText(Path.Combine(basePath, "Documents", "policies.json"), "[]");
         }
 
-        // --- Data Classes ---
+        private void SaveDepartmentData(string departmentName, string subDirectory, string fileName, object data)
+        {
+            try
+            {
+                string filePath = Path.Combine(
+                    Exiled.API.Features.Paths.Configs,
+                    "Site22Roleplay",
+                    "Departments",
+                    departmentName,
+                    subDirectory,
+                    fileName
+                );
+
+                string directory = Path.GetDirectoryName(filePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                File.WriteAllText(filePath, JsonConvert.SerializeObject(data, Formatting.Indented));
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error saving department data: {ex.Message}");
+            }
+        }
+
+        private T LoadDepartmentData<T>(string departmentName, string subDirectory, string fileName)
+        {
+            try
+            {
+                string filePath = Path.Combine(
+                    Exiled.API.Features.Paths.Configs,
+                    "Site22Roleplay",
+                    "Departments",
+                    departmentName,
+                    subDirectory,
+                    fileName
+                );
+
+                if (File.Exists(filePath))
+                {
+                    return JsonConvert.DeserializeObject<T>(File.ReadAllText(filePath));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error loading department data: {ex.Message}");
+            }
+
+            return default;
+        }
 
         public class Users
         {
@@ -791,37 +852,25 @@ namespace Site22Roleplay.WebServer
 
         public class LoginRequest
         {
+            public string Username { get; set; }
             public string Password { get; set; }
-        }
-
-        public class Department
-        {
-            public string Name { get; set; }
-            public string Password { get; set; }
-            public List<string> Roles { get; set; }
-        }
-
-        public class DiscordRole
-        {
-            public ulong Id { get; set; }
-            public string Name { get; set; }
         }
 
         public class RolePreset
         {
             public string Name { get; set; }
-             public List<ItemInfo> Items { get; set; } // Assuming ItemInfo is a class in Site22Roleplay.Models
-             public List<Exiled.API.Enums.AmmoType> Ammo { get; set; }
-             public Dictionary<string, ushort> Ammunition { get; set; }
-             public float Health { get; set; }
-             public Exiled.API.Enums.RoleTypeId RoleType { get; set; }
+            public List<ItemInfo> Items { get; set; }
+            public List<Exiled.API.Enums.AmmoType> Ammo { get; set; }
+            public Dictionary<string, ushort> Ammunition { get; set; }
+            public float Health { get; set; }
+            public Exiled.API.Enums.RoleTypeId RoleType { get; set; }
         }
 
-         public class ItemInfo
-         {
-              public ItemType ItemType { get; set; }
-              public byte Amount { get; set; }
-         }
+        public class ItemInfo
+        {
+            public ItemType ItemType { get; set; }
+            public byte Amount { get; set; }
+        }
 
         public class AddRoleRequest
         {
@@ -835,19 +884,19 @@ namespace Site22Roleplay.WebServer
 
         public class AddPlayerRequest
         {
-            public string PlayerUserID { get; set; }
+            public string SteamId { get; set; }
         }
 
         public class EditPlayerRequest
         {
-            public string PlayerUserID { get; set; }
+            public string PlayerId { get; set; }
             public Dictionary<string, int> RequiredRanks { get; set; }
             public int HoursPlayed { get; set; }
         }
 
         public class RemovePlayerRequest
         {
-            public string PlayerUserID { get; set; }
+            public string SteamId { get; set; }
         }
 
         public class DeleteLoadoutRequest
@@ -858,6 +907,435 @@ namespace Site22Roleplay.WebServer
         public class DeleteDepartmentRequest
         {
             public string Name { get; set; }
+        }
+
+        public class RosterEntry
+        {
+            public string SteamId { get; set; }
+            public string Rank { get; set; }
+            public DateTime AddedAt { get; set; }
+        }
+
+        public class SetRankRequest
+        {
+            public string SteamId { get; set; }
+            public string Rank { get; set; }
+        }
+
+        private async Task AddMemberToDepartment(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<AddDepartmentMemberRequest>(body);
+
+            if (string.IsNullOrEmpty(data.DepartmentName) || string.IsNullOrEmpty(data.SteamId) || string.IsNullOrEmpty(data.Role))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name, Steam ID, and role are required" });
+                return;
+            }
+
+            if (!_departments.TryGetValue(data.DepartmentName, out var department))
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Department not found" });
+                return;
+            }
+
+            var roleConfig = department.Roles.FirstOrDefault(r => r.Name == data.Role);
+            if (roleConfig == null)
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Invalid role for this department" });
+                return;
+            }
+
+            try
+            {
+                if (department.Members == null)
+                    department.Members = new List<DepartmentMember>();
+
+                // Check if player is already in department
+                if (department.Members.Any(m => m.SteamId == data.SteamId))
+                {
+                    response.StatusCode = 400;
+                    await WriteResponse(response, new { error = "Player is already in this department" });
+                    return;
+                }
+
+                department.Members.Add(new DepartmentMember
+                {
+                    SteamId = data.SteamId,
+                    Role = data.Role,
+                    JoinedAt = DateTime.UtcNow,
+                    AddedBy = GetCurrentUser(request)?.Username ?? "Unknown"
+                });
+
+                SaveDepartments();
+
+                // Update player's custom info in-game with formatted department header and role
+                var player = Player.Get(data.SteamId);
+                if (player != null)
+                {
+                    string serverInfo = FormatServerInfo(department, roleConfig);
+                    player.CustomInfo = serverInfo;
+                    player.InfoArea = PlayerInfoArea.CustomInfo;
+                    player.Broadcast(5, $"You have been added to {data.DepartmentName} as {roleConfig.ServerInfo}");
+                }
+
+                await WriteResponse(response, new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error adding member to department: {ex.Message}");
+                response.StatusCode = 500;
+                await WriteResponse(response, new { error = "Failed to add member to department" });
+            }
+        }
+
+        private string FormatServerInfo(Department department, DepartmentRole role)
+        {
+            // Format: [Department Name] - Role Info
+            return $"[{department.Name}] - {role.ServerInfo}";
+        }
+
+        private async Task RemoveMemberFromDepartment(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<RemoveDepartmentMemberRequest>(body);
+
+            if (string.IsNullOrEmpty(data.DepartmentName) || string.IsNullOrEmpty(data.SteamId))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name and Steam ID are required" });
+                return;
+            }
+
+            if (!_departments.TryGetValue(data.DepartmentName, out var department))
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Department not found" });
+                return;
+            }
+
+            try
+            {
+                var member = department.Members?.FirstOrDefault(m => m.SteamId == data.SteamId);
+                if (member == null)
+                {
+                    response.StatusCode = 404;
+                    await WriteResponse(response, new { error = "Member not found in department" });
+                    return;
+                }
+
+                department.Members.Remove(member);
+                SaveDepartments();
+
+                // Update player's custom info in-game
+                var player = Player.Get(data.SteamId);
+                if (player != null)
+                {
+                    player.CustomInfo = "Verified";
+                    player.InfoArea = PlayerInfoArea.CustomInfo;
+                    player.Broadcast(5, $"You have been removed from {data.DepartmentName}");
+                }
+
+                await WriteResponse(response, new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error removing member from department: {ex.Message}");
+                response.StatusCode = 500;
+                await WriteResponse(response, new { error = "Failed to remove member from department" });
+            }
+        }
+
+        public class AddDepartmentMemberRequest
+        {
+            public string DepartmentName { get; set; }
+            public string SteamId { get; set; }
+            public string Role { get; set; }
+        }
+
+        public class RemoveDepartmentMemberRequest
+        {
+            public string DepartmentName { get; set; }
+            public string SteamId { get; set; }
+        }
+
+        // Add this method to handle role selection during roleplay
+        public void HandleRoleSelection(Player player, string departmentName, string categoryName)
+        {
+            if (!_departments.TryGetValue(departmentName, out var department))
+            {
+                player.Broadcast(5, "Department not found.");
+                return;
+            }
+
+            var member = department.Members?.FirstOrDefault(m => m.SteamId == player.UserId);
+            if (member == null)
+            {
+                player.Broadcast(5, "You are not a member of this department.");
+                return;
+            }
+
+            var category = department.RankCategories?.FirstOrDefault(c => c.Name == categoryName);
+            if (category == null)
+            {
+                player.Broadcast(5, "Category not found.");
+                return;
+            }
+
+            var roleConfig = department.Roles.FirstOrDefault(r => r.Name == member.Role && category.RoleNames.Contains(r.Name));
+            if (roleConfig == null)
+            {
+                player.Broadcast(5, "You do not have a role in this category.");
+                return;
+            }
+
+            // Set the player's role
+            player.Role = roleConfig.GameRole;
+            string serverInfo = FormatServerInfo(department, roleConfig);
+            player.CustomInfo = serverInfo;
+            player.InfoArea = PlayerInfoArea.CustomInfo;
+            player.Broadcast(5, $"You have selected the role: {roleConfig.ServerInfo}");
+        }
+
+        // Add this method to get available roles for a player
+        public List<DepartmentRole> GetAvailableRoles(string steamId)
+        {
+            var availableRoles = new List<DepartmentRole>();
+            
+            foreach (var department in _departments.Values)
+            {
+                var member = department.Members?.FirstOrDefault(m => m.SteamId == steamId);
+                if (member != null)
+                {
+                    var role = department.Roles.FirstOrDefault(r => r.Name == member.Role);
+                    if (role != null)
+                    {
+                        availableRoles.Add(role);
+                    }
+                }
+            }
+
+            return availableRoles;
+        }
+
+        // Add this method to handle server info selection
+        public void HandleServerInfoSelection(Player player, string departmentName, string roleName)
+        {
+            if (!_departments.TryGetValue(departmentName, out var department))
+            {
+                player.Broadcast(5, "Department not found.");
+                return;
+            }
+
+            var member = department.Members?.FirstOrDefault(m => m.SteamId == player.UserId);
+            if (member == null)
+            {
+                player.Broadcast(5, "You are not a member of this department.");
+                return;
+            }
+
+            var roleConfig = department.Roles.FirstOrDefault(r => r.Name == roleName);
+            if (roleConfig == null)
+            {
+                player.Broadcast(5, "Invalid role for this department.");
+                return;
+            }
+
+            // Check if player's rank allows them to select this role
+            if (member.Role != roleName)
+            {
+                player.Broadcast(5, "You do not have permission to select this role.");
+                return;
+            }
+
+            // Update player's custom info with formatted department header and role
+            string serverInfo = FormatServerInfo(department, roleConfig);
+            player.CustomInfo = serverInfo;
+            player.InfoArea = PlayerInfoArea.CustomInfo;
+            player.Broadcast(5, $"Your server info has been updated to: {serverInfo}");
+        }
+
+        // Add this method to get formatted server info for a player
+        public string GetPlayerServerInfo(string steamId)
+        {
+            foreach (var department in _departments.Values)
+            {
+                var member = department.Members?.FirstOrDefault(m => m.SteamId == steamId);
+                if (member != null)
+                {
+                    var role = department.Roles.FirstOrDefault(r => r.Name == member.Role);
+                    if (role != null)
+                    {
+                        return FormatServerInfo(department, role);
+                    }
+                }
+            }
+            return string.Empty;
+        }
+
+        // Add this method to update all players' server info
+        public void UpdateAllPlayersServerInfo()
+        {
+            foreach (var player in Player.List)
+            {
+                if (player.IsHost) continue;
+
+                string serverInfo = GetPlayerServerInfo(player.UserId);
+                if (!string.IsNullOrEmpty(serverInfo))
+                {
+                    player.CustomInfo = serverInfo;
+                    player.InfoArea = PlayerInfoArea.CustomInfo;
+                }
+            }
+        }
+
+        private async Task AddRankCategory(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<AddRankCategoryRequest>(body);
+
+            if (string.IsNullOrEmpty(data.DepartmentName) || string.IsNullOrEmpty(data.Name))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name and category name are required" });
+                return;
+            }
+
+            if (!_departments.TryGetValue(data.DepartmentName, out var department))
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Department not found" });
+                return;
+            }
+
+            if (department.RankCategories == null)
+                department.RankCategories = new List<RankCategory>();
+
+            if (department.RankCategories.Any(c => c.Name == data.Name))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Category already exists" });
+                return;
+            }
+
+            department.RankCategories.Add(new RankCategory
+            {
+                Name = data.Name,
+                Description = data.Description,
+                RoleNames = data.RoleNames ?? new List<string>(),
+                Color = data.Color ?? "#ff6b00"
+            });
+
+            SaveDepartments();
+            await WriteResponse(response, new { success = true });
+        }
+
+        private async Task EditRankCategory(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<EditRankCategoryRequest>(body);
+
+            if (string.IsNullOrEmpty(data.DepartmentName) || string.IsNullOrEmpty(data.OldName))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name and category name are required" });
+                return;
+            }
+
+            if (!_departments.TryGetValue(data.DepartmentName, out var department))
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Department not found" });
+                return;
+            }
+
+            var category = department.RankCategories?.FirstOrDefault(c => c.Name == data.OldName);
+            if (category == null)
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Category not found" });
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(data.NewName))
+                category.Name = data.NewName;
+            if (!string.IsNullOrEmpty(data.Description))
+                category.Description = data.Description;
+            if (data.RoleNames != null)
+                category.RoleNames = data.RoleNames;
+            if (!string.IsNullOrEmpty(data.Color))
+                category.Color = data.Color;
+
+            SaveDepartments();
+            await WriteResponse(response, new { success = true });
+        }
+
+        private async Task RemoveRankCategory(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = await ReadRequestBody(request);
+            var data = JsonConvert.DeserializeObject<RemoveRankCategoryRequest>(body);
+
+            if (string.IsNullOrEmpty(data.DepartmentName) || string.IsNullOrEmpty(data.CategoryName))
+            {
+                response.StatusCode = 400;
+                await WriteResponse(response, new { error = "Department name and category name are required" });
+                return;
+            }
+
+            if (!_departments.TryGetValue(data.DepartmentName, out var department))
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Department not found" });
+                return;
+            }
+
+            var category = department.RankCategories?.FirstOrDefault(c => c.Name == data.CategoryName);
+            if (category == null)
+            {
+                response.StatusCode = 404;
+                await WriteResponse(response, new { error = "Category not found" });
+                return;
+            }
+
+            department.RankCategories.Remove(category);
+            SaveDepartments();
+            await WriteResponse(response, new { success = true });
+        }
+
+        public class RankCategory
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public List<string> RoleNames { get; set; }
+            public string Color { get; set; }
+        }
+
+        public class AddRankCategoryRequest
+        {
+            public string DepartmentName { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public List<string> RoleNames { get; set; }
+            public string Color { get; set; }
+        }
+
+        public class EditRankCategoryRequest
+        {
+            public string DepartmentName { get; set; }
+            public string OldName { get; set; }
+            public string NewName { get; set; }
+            public string Description { get; set; }
+            public List<string> RoleNames { get; set; }
+            public string Color { get; set; }
+        }
+
+        public class RemoveRankCategoryRequest
+        {
+            public string DepartmentName { get; set; }
+            public string CategoryName { get; set; }
         }
     }
 } 

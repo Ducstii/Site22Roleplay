@@ -161,6 +161,14 @@
                     <small>Hold Ctrl/Cmd to select multiple roles</small>
                 </div>
 
+                <div class="form-group">
+                    <label for="discord-role">Associated Discord Role:</label>
+                    <select id="discord-role">
+                        <option value="">--Select Discord Role--</option>
+                        <!-- Discord roles will be loaded here by JavaScript -->
+                    </select>
+                </div>
+
                 <button id="save-department-btn">Save Department</button>
                 <button id="clear-department-btn" style="background-color: #666; margin-left: 10px;">Clear Form</button>
 
@@ -313,6 +321,25 @@
             const clearDepartmentBtn = document.getElementById('clear-department-btn');
             const departmentsList = document.getElementById('departments-list');
 
+            // Discord role management
+            const discordRoleSelect = document.getElementById('discord-role');
+
+            // Function to fetch Discord roles
+            function fetchDiscordRoles() {
+                fetch('/api/discord/roles')
+                    .then(response => response.json())
+                    .then(roles => {
+                        discordRoleSelect.innerHTML = '<option value="">--Select Discord Role--</option>';
+                        roles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.Id;
+                            option.textContent = role.Name;
+                            discordRoleSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching Discord roles:', error));
+            }
+
             // Function to fetch departments
             function fetchDepartments() {
                 fetch('/api/departments')
@@ -328,6 +355,7 @@
                                     <strong>${dept.Name}</strong>
                                     <div>Password: ${dept.Password}</div>
                                     <div>Allowed Roles: ${dept.AllowedRoles.join(', ')}</div>
+                                    <div>Discord Role: ${discordRoleSelect.options[discordRoleSelect.selectedIndex]?.text || 'None'}</div>
                                     <button onclick="editDepartment('${dept.Name}')" style="background-color: #4CAF50; margin-right: 5px;">Edit</button>
                                     <button onclick="deleteDepartment('${dept.Name}')" style="background-color: #f44336;">Delete</button>
                                 `;
@@ -343,9 +371,10 @@
                 const name = departmentNameInput.value;
                 const password = departmentPasswordInput.value;
                 const selectedRoles = Array.from(departmentRolesSelect.selectedOptions).map(option => option.value);
+                const discordRoleId = discordRoleSelect.value;
 
-                if (!name || !password || selectedRoles.length === 0) {
-                    alert('Please fill in all fields and select at least one role.');
+                if (!name || !password || selectedRoles.length === 0 || !discordRoleId) {
+                    alert('Please fill in all fields, select at least one role, and choose a Discord role.');
                     return;
                 }
 
@@ -357,7 +386,8 @@
                     body: JSON.stringify({
                         Name: name,
                         Password: password,
-                        AllowedRoles: selectedRoles
+                        AllowedRoles: selectedRoles,
+                        DiscordRoleId: discordRoleId
                     }),
                 })
                 .then(response => {
@@ -379,6 +409,7 @@
                 departmentNameInput.value = '';
                 departmentPasswordInput.value = '';
                 departmentRolesSelect.selectedIndex = -1;
+                discordRoleSelect.selectedIndex = 0;
             }
 
             // Function to edit department
@@ -392,6 +423,8 @@
                         Array.from(departmentRolesSelect.options).forEach(option => {
                             option.selected = dept.AllowedRoles.includes(option.value);
                         });
+                        // Select the Discord role
+                        discordRoleSelect.value = dept.DiscordRoleId || '';
                     })
                     .catch(error => console.error('Error fetching department details:', error));
             };
@@ -435,6 +468,7 @@
             fetchOnlinePlayers();
             fetchDepartments();
             loadRolePresetsForDepartments();
+            fetchDiscordRoles();
         });
     </script>
 </body>

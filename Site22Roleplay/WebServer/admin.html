@@ -1,0 +1,673 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site-22 Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #2d2d2d;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar h2 {
+            color: #ff6b00;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar a {
+            color: #ffffff;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #3d3d3d;
+        }
+
+        .sidebar a.active {
+            background-color: #ff6b00;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .section {
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #ff6b00;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #3d3d3d;
+            border-radius: 5px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #ff6b00;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff8533;
+        }
+
+        .department-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .department-item {
+            background-color: #3d3d3d;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .department-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: var(--header-color, #ff6b00);
+            border-radius: 5px;
+            color: white;
+        }
+
+        .department-name {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .department-info {
+            color: #888;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .department-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .department-actions button {
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+
+        .department-actions button.remove {
+            background-color: #ff3333;
+        }
+
+        .department-actions button.remove:hover {
+            background-color: #ff6666;
+        }
+
+        .category-list {
+            margin-top: 10px;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            border-left: 4px solid var(--category-color, #ff6b00);
+        }
+
+        .category-name {
+            font-weight: bold;
+            color: var(--category-color, #ff6b00);
+        }
+
+        .category-description {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .category-roles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .category-role-tag {
+            background: #4a4a4a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+        }
+
+        .add-category {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+
+        .member-list {
+            margin-top: 10px;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .member-item .role-tag {
+            background: #4a4a4a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+        }
+
+        .add-member {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .add-member select {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #4a4a4a;
+            background: #2a2a2a;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Site-22</h2>
+            <ul>
+                <li><a href="#" onclick="showSection('departments')" class="active">Departments</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div id="departments" class="section">
+                <h2>Department Management</h2>
+                <div class="form-group">
+                    <label for="name">Department Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Department Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="roles">Available Roles:</label>
+                    <select id="roles" multiple>
+                        <option value="ClassD">Class-D</option>
+                        <option value="Scientist">Scientist</option>
+                        <option value="Guard">Guard</option>
+                        <option value="MTF">MTF</option>
+                        <option value="SCP">SCP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="header-color">Header Color:</label>
+                    <input type="color" id="header-color" value="#4a90e2">
+                </div>
+                <button onclick="addDepartment()">Add Department</button>
+                <h3>Current Departments</h3>
+                <ul id="departmentList" class="department-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load departments
+        async function loadDepartments() {
+            try {
+                const response = await fetch('/departments');
+                const departments = await response.json();
+                
+                const departmentList = document.getElementById('departmentList');
+                departmentList.innerHTML = departments.map(department => `
+                    <div class="department-item">
+                        <div class="department-header" style="--header-color: ${department.HeaderColor}">
+                            <h3 class="department-name">${department.Name}</h3>
+                            <div class="department-actions">
+                                <button onclick="editDepartment('${department.Name}')" class="edit-btn">Edit</button>
+                                <button onclick="removeDepartment('${department.Name}')" class="remove-btn">Remove</button>
+                            </div>
+                        </div>
+                        <div class="department-info">
+                            <p>Created: ${new Date(department.CreatedAt).toLocaleString()}</p>
+                            <p>Created by: ${department.CreatedBy}</p>
+                            ${department.LastModified ? `<p>Last modified: ${new Date(department.LastModified).toLocaleString()} by ${department.ModifiedBy}</p>` : ''}
+                        </div>
+                        <div class="department-categories">
+                            <h4>Rank Categories</h4>
+                            <div class="category-list">
+                                ${department.RankCategories ? department.RankCategories.map(category => `
+                                    <div class="category-item" style="--category-color: ${category.Color}">
+                                        <div class="category-info">
+                                            <div class="category-name">${category.Name}</div>
+                                            <div class="category-description">${category.Description}</div>
+                                            <div class="category-roles">
+                                                ${category.RoleNames.map(roleName => `
+                                                    <span class="category-role-tag">${roleName}</span>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        <div class="category-actions">
+                                            <button onclick="editCategory('${department.Name}', '${category.Name}')" class="edit-btn">Edit</button>
+                                            <button onclick="removeCategory('${department.Name}', '${category.Name}')" class="remove-btn">Remove</button>
+                                        </div>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+                            <div class="add-category">
+                                <input type="text" id="new-category-name-${department.Name}" placeholder="Category name">
+                                <textarea id="new-category-description-${department.Name}" placeholder="Category description"></textarea>
+                                <select id="new-category-roles-${department.Name}" multiple>
+                                    ${department.Roles.map(role => `
+                                        <option value="${role.Name}">${role.Name}</option>
+                                    `).join('')}
+                                </select>
+                                <input type="color" id="new-category-color-${department.Name}" value="#ff6b00">
+                                <button onclick="addCategory('${department.Name}')">Add Category</button>
+                            </div>
+                        </div>
+                        <div class="department-members">
+                            <h4>Department Members</h4>
+                            <div class="member-list">
+                                ${department.Members ? department.Members.map(member => `
+                                    <div class="member-item">
+                                        <span>${member.SteamId}</span>
+                                        <span class="role-tag">${member.Role}</span>
+                                        <span>Joined: ${new Date(member.JoinedAt).toLocaleString()}</span>
+                                        <button onclick="removeMember('${department.Name}', '${member.SteamId}')" class="remove-btn">Remove</button>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+                            <div class="add-member">
+                                <select id="available-players-${department.Name}">
+                                    <option value="">Select player...</option>
+                                </select>
+                                <select id="member-role-${department.Name}">
+                                    <option value="">Select role...</option>
+                                    ${department.Roles.map(role => `
+                                        <option value="${role.Name}">${role.Name}</option>
+                                    `).join('')}
+                                </select>
+                                <button onclick="addMember('${department.Name}')">Add Member</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Load available players after departments are loaded
+                loadAvailablePlayers();
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        // Add department
+        function addDepartment() {
+            const name = document.getElementById('name').value;
+            const password = document.getElementById('password').value;
+            const roles = Array.from(document.getElementById('roles').selectedOptions).map(option => option.value);
+            const headerColor = document.getElementById('header-color').value;
+
+            if (!name || !password || roles.length === 0) {
+                alert('Please fill in all fields and select at least one role.');
+                return;
+            }
+
+            fetch('/api/departments/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                },
+                body: JSON.stringify({
+                    Name: name,
+                    Password: password,
+                    Roles: roles,
+                    HeaderColor: headerColor
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Department added successfully!');
+                    loadDepartments();
+                    // Clear form
+                    document.getElementById('name').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('roles').selectedIndex = -1;
+                    document.getElementById('header-color').value = '#4a90e2';
+                } else {
+                    alert('Error adding department: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error adding department:', error));
+        }
+
+        // Edit department
+        async function editDepartment(name) {
+            const newPassword = prompt('Enter new password (leave empty to keep current):');
+            if (newPassword === null) return;
+
+            try {
+                const response = await fetch('/departments/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        password: newPassword
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadDepartments();
+                } else {
+                    alert(data.error || 'Failed to edit department');
+                }
+            } catch (error) {
+                console.error('Error editing department:', error);
+                alert('Failed to edit department');
+            }
+        }
+
+        // Remove department
+        async function removeDepartment(name) {
+            if (!confirm(`Are you sure you want to remove the department "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/departments/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadDepartments();
+                } else {
+                    alert(data.error || 'Failed to remove department');
+                }
+            } catch (error) {
+                console.error('Error removing department:', error);
+                alert('Failed to remove department');
+            }
+        }
+
+        // Add category
+        async function addCategory(departmentName) {
+            const name = document.getElementById(`new-category-name-${departmentName}`).value;
+            const description = document.getElementById(`new-category-description-${departmentName}`).value;
+            const color = document.getElementById(`new-category-color-${departmentName}`).value;
+            const roleSelect = document.getElementById(`new-category-roles-${departmentName}`);
+            const roleNames = Array.from(roleSelect.selectedOptions).map(option => option.value);
+
+            if (!name) {
+                alert('Please enter a category name');
+                return;
+            }
+
+            try {
+                const response = await fetch('/departments/categories/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        DepartmentName: departmentName,
+                        Name: name,
+                        Description: description,
+                        RoleNames: roleNames,
+                        Color: color
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById(`new-category-name-${departmentName}`).value = '';
+                    document.getElementById(`new-category-description-${departmentName}`).value = '';
+                    document.getElementById(`new-category-color-${departmentName}`).value = '#ff6b00';
+                    roleSelect.selectedIndex = -1;
+                    loadDepartments();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to add category');
+                }
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Failed to add category');
+            }
+        }
+
+        // Edit category
+        async function editCategory(departmentName, categoryName) {
+            const newName = prompt('Enter new category name:', categoryName);
+            if (newName === null) return;
+
+            const description = prompt('Enter new category description:');
+            if (description === null) return;
+
+            const color = prompt('Enter new category color (hex):', '#ff6b00');
+            if (color === null) return;
+
+            try {
+                const response = await fetch('/departments/categories/edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        DepartmentName: departmentName,
+                        OldName: categoryName,
+                        NewName: newName,
+                        Description: description,
+                        Color: color
+                    })
+                });
+
+                if (response.ok) {
+                    loadDepartments();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to edit category');
+                }
+            } catch (error) {
+                console.error('Error editing category:', error);
+                alert('Failed to edit category');
+            }
+        }
+
+        // Remove category
+        async function removeCategory(departmentName, categoryName) {
+            if (!confirm(`Are you sure you want to remove the category "${categoryName}"?`)) return;
+
+            try {
+                const response = await fetch('/departments/categories/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        DepartmentName: departmentName,
+                        CategoryName: categoryName
+                    })
+                });
+
+                if (response.ok) {
+                    loadDepartments();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to remove category');
+                }
+            } catch (error) {
+                console.error('Error removing category:', error);
+                alert('Failed to remove category');
+            }
+        }
+
+        // Add member
+        async function addMember(departmentName) {
+            const steamId = document.getElementById(`available-players-${departmentName}`).value;
+            const role = document.getElementById(`member-role-${departmentName}`).value;
+
+            if (!steamId || !role) {
+                alert('Please select both a player and a role');
+                return;
+            }
+
+            try {
+                const response = await fetch('/departments/members/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ DepartmentName: departmentName, SteamId: steamId, Role: role })
+                });
+
+                if (response.ok) {
+                    loadDepartments();
+                    loadAvailablePlayers();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to add member');
+                }
+            } catch (error) {
+                console.error('Error adding member:', error);
+                alert('Failed to add member');
+            }
+        }
+
+        // Remove member
+        async function removeMember(departmentName, steamId) {
+            if (!confirm('Are you sure you want to remove this member?')) return;
+
+            try {
+                const response = await fetch('/departments/members/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ DepartmentName: departmentName, SteamId: steamId })
+                });
+
+                if (response.ok) {
+                    loadDepartments();
+                    loadAvailablePlayers();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to remove member');
+                }
+            } catch (error) {
+                console.error('Error removing member:', error);
+                alert('Failed to remove member');
+            }
+        }
+
+        // Load available players
+        async function loadAvailablePlayers() {
+            try {
+                const response = await fetch('/players/available');
+                const players = await response.json();
+                
+                document.querySelectorAll('[id^="available-players-"]').forEach(select => {
+                    const departmentName = select.id.replace('available-players-', '');
+                    select.innerHTML = '<option value="">Select player...</option>';
+                    players.forEach(player => {
+                        const option = document.createElement('option');
+                        option.value = player.Id;
+                        option.textContent = `${player.Name} (${player.Role})`;
+                        select.appendChild(option);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading available players:', error);
+            }
+        }
+
+        // Logout
+        function logout() {
+            fetch('/logout').then(() => {
+                window.location.href = '/';
+            });
+        }
+
+        // Initial load
+        loadDepartments();
+    </script>
+</body>
+</html> 

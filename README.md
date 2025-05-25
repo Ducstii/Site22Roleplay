@@ -39,10 +39,5 @@ The plugin adds several commands and features:
 *   **Server Specific Menu:** Role selection is handled via the Server Specific menu (SSM), replacing the old `.role` commands.
 *   **Web Server (Under Development):** [Describe the web server functionality if applicable and stable].
 
-## Contributing
-
-[Optional: Explain how others can contribute to your project.]
-
-## License
-
-[Optional: Specify the license for your project.] 
+## Credits
+- Site 12, massive inspiration. This was a project I wanted to attempt to make, and improve.
