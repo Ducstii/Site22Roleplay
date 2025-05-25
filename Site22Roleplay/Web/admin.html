@@ -1,0 +1,441 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site-22 Roleplay Admin</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ff7a00;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            display: block;
+            border-bottom: 1px solid #555;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #555;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main-content h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #ff7a00;
+            border-bottom: 2px solid #ff7a00;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #ff7a00;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #cc6200;
+        }
+
+        .player-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .player-list li {
+            background-color: #eee;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .player-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h2>Admin Panel</h2>
+            <a href="#">Dashboard</a>
+            <a href="#department-view">Department View</a>
+            <a href="#admin-view">Admin View</a>
+            <a href="#">Settings</a>
+            <a href="#">Logout</a>
+        </aside>
+        <main class="main-content">
+            <section id="department-view" class="section">
+                <h2>Department Management</h2>
+                
+                <div class="form-group">
+                    <label for="department-name">Department Name:</label>
+                    <input type="text" id="department-name" placeholder="Enter department name">
+                </div>
+
+                <div class="form-group">
+                    <label for="department-password">Department Password:</label>
+                    <input type="password" id="department-password" placeholder="Enter department password">
+                </div>
+
+                <div class="form-group">
+                    <label for="department-roles">Allowed Role Presets:</label>
+                    <select id="department-roles" multiple>
+                        <!-- Role presets will be loaded here by JavaScript -->
+                    </select>
+                    <small>Hold Ctrl/Cmd to select multiple roles</small>
+                </div>
+
+                <button id="save-department-btn">Save Department</button>
+                <button id="clear-department-btn" style="background-color: #666; margin-left: 10px;">Clear Form</button>
+
+                <h3>Existing Departments</h3>
+                <div id="departments-list" class="player-list">
+                    <!-- Departments will be loaded here by JavaScript -->
+                </div>
+            </section>
+
+            <section id="admin-view" class="section">
+                <h2>Admin View</h2>
+
+                <div class="form-group">
+                    <label for="player-id">Player ID:</label>
+                    <input type="text" id="player-id" placeholder="Enter Player ID">
+                </div>
+
+                <div class="form-group">
+                    <label for="role-preset">Role Preset:</label>
+                    <select id="role-preset">
+                        <option value="">--Select Role Preset--</option>
+                        <!-- Role presets will be loaded here by JavaScript -->
+                    </select>
+                </div>
+
+                <button id="apply-role-btn">Apply Role</button>
+
+                <h3>Online Players</h3>
+                <ul id="online-players-list" class="player-list">
+                    <!-- Online players will be loaded here by JavaScript -->
+                </ul>
+
+                <h3>Send Command</h3>
+                <div class="form-group">
+                    <label for="command-input">Command:</label>
+                    <input type="text" id="command-input" placeholder="Enter command">
+                </div>
+                <button id="send-command-btn">Send Command</button>
+
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rolePresetSelect = document.getElementById('role-preset');
+            const applyRoleBtn = document.getElementById('apply-role-btn');
+            const playerIdInput = document.getElementById('player-id');
+            const onlinePlayersList = document.getElementById('online-players-list');
+            const commandInput = document.getElementById('command-input');
+            const sendCommandBtn = document.getElementById('send-command-btn');
+
+            // Function to fetch role presets
+            function fetchRolePresets() {
+                fetch('/api/roles') // Assuming /api/roles endpoint exists
+                    .then(response => response.json())
+                    .then(roles => {
+                        rolePresetSelect.innerHTML = '<option value="">--Select Role Preset--</option>'; // Clear existing options
+                        roles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.Name; // Assuming role object has a Name property
+                            option.textContent = role.Name;
+                            rolePresetSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching role presets:', error));
+            }
+
+            // Function to apply a role to a player
+            applyRoleBtn.addEventListener('click', () => {
+                const playerId = playerIdInput.value;
+                const roleName = rolePresetSelect.value;
+
+                if (!playerId || !roleName) {
+                    alert('Please enter Player ID and select a Role Preset.');
+                    return;
+                }
+
+                fetch('/api/apply-role', { // Assuming /api/apply-role endpoint exists
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ playerId: playerId, roleName: roleName }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert(`Role ${roleName} applied to player ${playerId}.`);
+                        // Optionally refresh online players list or provide feedback
+                    } else {
+                        alert('Failed to apply role.');
+                    }
+                })
+                .catch(error => console.error('Error applying role:', error));
+            });
+
+            // Function to fetch online players
+            function fetchOnlinePlayers() {
+                fetch('/api/online-players') // Assuming /api/online-players endpoint exists
+                    .then(response => response.json())
+                    .then(players => {
+                        onlinePlayersList.innerHTML = ''; // Clear existing players
+                        if (players.length === 0) {
+                            onlinePlayersList.innerHTML = '<li>No players online.</li>';
+                        } else {
+                            players.forEach(player => {
+                                const li = document.createElement('li');
+                                li.textContent = `${player.Nickname} (${player.UserId})`; // Adjust based on player object structure
+                                onlinePlayersList.appendChild(li);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error fetching online players:', error));
+            }
+
+            // Function to send a command
+            if (sendCommandBtn) { // Check if button exists
+                sendCommandBtn.addEventListener('click', () => {
+                    const command = commandInput.value;
+
+                    if (!command) {
+                        alert('Please enter a command.');
+                        return;
+                    }
+
+                    fetch('/api/send-command', { // Assuming /api/send-command endpoint exists
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ command: command }),
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Command sent successfully.');
+                            commandInput.value = ''; // Clear input
+                        } else {
+                            alert('Failed to send command.');
+                        }
+                    })
+                    .catch(error => console.error('Error sending command:', error));
+                });
+            }
+
+            // Department management elements
+            const departmentNameInput = document.getElementById('department-name');
+            const departmentPasswordInput = document.getElementById('department-password');
+            const departmentRolesSelect = document.getElementById('department-roles');
+            const saveDepartmentBtn = document.getElementById('save-department-btn');
+            const clearDepartmentBtn = document.getElementById('clear-department-btn');
+            const departmentsList = document.getElementById('departments-list');
+
+            // Function to fetch departments
+            function fetchDepartments() {
+                fetch('/api/departments')
+                    .then(response => response.json())
+                    .then(departments => {
+                        departmentsList.innerHTML = '';
+                        if (departments.length === 0) {
+                            departmentsList.innerHTML = '<li>No departments found.</li>';
+                        } else {
+                            departments.forEach(dept => {
+                                const li = document.createElement('li');
+                                li.innerHTML = `
+                                    <strong>${dept.Name}</strong>
+                                    <div>Password: ${dept.Password}</div>
+                                    <div>Allowed Roles: ${dept.AllowedRoles.join(', ')}</div>
+                                    <button onclick="editDepartment('${dept.Name}')" style="background-color: #4CAF50; margin-right: 5px;">Edit</button>
+                                    <button onclick="deleteDepartment('${dept.Name}')" style="background-color: #f44336;">Delete</button>
+                                `;
+                                departmentsList.appendChild(li);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error fetching departments:', error));
+            }
+
+            // Function to save department
+            saveDepartmentBtn.addEventListener('click', () => {
+                const name = departmentNameInput.value;
+                const password = departmentPasswordInput.value;
+                const selectedRoles = Array.from(departmentRolesSelect.selectedOptions).map(option => option.value);
+
+                if (!name || !password || selectedRoles.length === 0) {
+                    alert('Please fill in all fields and select at least one role.');
+                    return;
+                }
+
+                fetch('/api/departments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        Name: name,
+                        Password: password,
+                        AllowedRoles: selectedRoles
+                    }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Department saved successfully.');
+                        clearDepartmentForm();
+                        fetchDepartments();
+                    } else {
+                        alert('Failed to save department.');
+                    }
+                })
+                .catch(error => console.error('Error saving department:', error));
+            });
+
+            // Function to clear department form
+            clearDepartmentBtn.addEventListener('click', clearDepartmentForm);
+
+            function clearDepartmentForm() {
+                departmentNameInput.value = '';
+                departmentPasswordInput.value = '';
+                departmentRolesSelect.selectedIndex = -1;
+            }
+
+            // Function to edit department
+            window.editDepartment = function(name) {
+                fetch(`/api/departments/${encodeURIComponent(name)}`)
+                    .then(response => response.json())
+                    .then(dept => {
+                        departmentNameInput.value = dept.Name;
+                        departmentPasswordInput.value = dept.Password;
+                        // Select the roles in the multi-select
+                        Array.from(departmentRolesSelect.options).forEach(option => {
+                            option.selected = dept.AllowedRoles.includes(option.value);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching department details:', error));
+            };
+
+            // Function to delete department
+            window.deleteDepartment = function(name) {
+                if (confirm(`Are you sure you want to delete the department "${name}"?`)) {
+                    fetch(`/api/departments/${encodeURIComponent(name)}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Department deleted successfully.');
+                            fetchDepartments();
+                        } else {
+                            alert('Failed to delete department.');
+                        }
+                    })
+                    .catch(error => console.error('Error deleting department:', error));
+                }
+            };
+
+            // Load role presets into department roles select
+            function loadRolePresetsForDepartments() {
+                fetch('/api/roles')
+                    .then(response => response.json())
+                    .then(roles => {
+                        departmentRolesSelect.innerHTML = '';
+                        roles.forEach(role => {
+                            const option = document.createElement('option');
+                            option.value = role.Name;
+                            option.textContent = role.Name;
+                            departmentRolesSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error loading role presets for departments:', error));
+            }
+
+            // Initial data fetch
+            fetchRolePresets();
+            fetchOnlinePlayers();
+            fetchDepartments();
+            loadRolePresetsForDepartments();
+        });
+    </script>
+</body>
+</html> 

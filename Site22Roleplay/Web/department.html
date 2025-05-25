@@ -1,0 +1,68 @@
+<!-- department.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site22 Roleplay Department</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        h2 { color: #333; }
+        /* Add more styles for department view */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="departmentName">Department View</h2>
+        <p id="departmentDetails">Loading department details...</p>
+
+        <!-- Department specific information will be displayed here -->
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const departmentName = urlParams.get('name'); // Assuming department name is passed as a query parameter like ?name=Security
+
+            const departmentNameElement = document.getElementById('departmentName');
+            const departmentDetailsElement = document.getElementById('departmentDetails');
+
+            if (!departmentName) {
+                departmentNameElement.textContent = 'Error';
+                departmentDetailsElement.textContent = 'No department name provided in the URL.';
+                return;
+            }
+
+            departmentNameElement.textContent = `Department: ${departmentName}`;
+
+            // *** NOTE: The server-side endpoint to fetch a single department by name needs to be implemented. ***
+            // Fetch data for the specific department
+            fetch(`/api/departments/byname?name=${encodeURIComponent(departmentName)}`)
+                .then(response => {
+                    if (!response.ok) {
+                         if (response.status === 404) {
+                            throw new Error('Department not found.');
+                        } else {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Display department details (basic example)
+                    departmentDetailsElement.innerHTML = `
+                        <p>Password: ${data.password}</p>
+                        <p>Roles: ${data.roles.join(', ')}</p>
+                        <!-- Add more details as needed -->
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error fetching department details:', error);
+                    departmentDetailsElement.textContent = `Error loading department details: ${error.message}`;
+                });
+        });
+    </script>
+</body>
+</html> 

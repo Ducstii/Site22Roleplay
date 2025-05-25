@@ -1,0 +1,135 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Login</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: url('https://raw.githubusercontent.com/mylinuxforwork/wallpaper/refs/heads/main/explorer_orange_sunset.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Container for the Login Screen */
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Login Box Styling with Subtle Transparent Blur */
+        .login-box {
+            background: rgba(255, 255, 255, 0.85); /* Reduced transparency */
+            backdrop-filter: blur(5px); /* Subtle blur effect */
+            border-radius: 20px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow for contrast */
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.7); /* Subtle border for definition */
+        }
+
+        /* Header */
+        .login-box h1 {
+            color: #ff7a00; /* Vibrant Orange */
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Text shadow for better visibility */
+        }
+
+        /* Input Styling */
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #ff7a00;
+            border-radius: 10px;
+            outline: none;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9); /* Almost solid for clarity */
+            color: #333; /* Darker text color for contrast */
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Slight shadow for depth */
+        }
+
+        .login-box input::placeholder {
+            color: #888; /* Softer gray for placeholders */
+        }
+
+        /* Button Styling */
+        .login-box button {
+            width: 100%;
+            background-color: #ff7a00;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Button shadow for depth */
+        }
+
+        .login-box button:hover {
+            background-color: #cc6200; /* Slightly darker orange */
+            transform: translateY(-2px); /* Subtle lift on hover */
+        }
+
+        .login-box button:active {
+            transform: translateY(1px); /* Button depress on click */
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h1>Department Login</h1>
+            <form id="loginForm">
+                <input id="password" name="password" type="password" placeholder="Enter Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const password = document.getElementById('password').value;
+
+            fetch('/login', { // Use the /login endpoint
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: password }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/home'; // Redirect to /home on success
+                } else {
+                    alert('Login failed. Please check your password.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during login.');
+            });
+        });
+    </script>
+</body>
+</html> 
